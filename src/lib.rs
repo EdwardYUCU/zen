@@ -1,5 +1,6 @@
 use clap::Parser;
 
+/// A tool to show the word info in a file
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
@@ -8,5 +9,5 @@ pub struct Cli {
 
     /// The number of the result to show
     #[arg(short, long)]
-    pub number: i32,
+    pub number: Option(i32),
 }
