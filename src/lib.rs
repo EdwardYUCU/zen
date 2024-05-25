@@ -8,6 +8,7 @@ pub struct Cli {
     pub filename: String,
 
     /// The number of the result to show
+    /// sort the result in decending order a show the first n entries.
     #[arg(short, long)]
     pub number: Option(i32),
 }
