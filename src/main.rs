@@ -1,5 +1,10 @@
-use zen::Cli;
+use clap::Parser;
+use zen::{display, search, Cli};
 
 fn main() {
-    println!("Hello, world!");
+    let args: Cli = Cli::parse();
+    match search(&args) {
+        Err(e) => println!("Error: {}", e),
+        Ok(index) => display(&index, args.number),
+    }
 }
