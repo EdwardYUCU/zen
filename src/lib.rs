@@ -9,5 +9,9 @@ pub struct Cli {
 
     /// The number of the result to show
     #[arg(short, long)]
-    pub number: Option(i32),
+    pub number: Option<i32>,
+
+    /// Show word count
+    #[arg(short, long)]
+    pub count: bool,
 }
