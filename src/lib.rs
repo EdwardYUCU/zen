@@ -23,10 +23,9 @@ pub fn search(args: &Cli) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Er
     let content = fs::read_to_string(&args.filename)?;
 
     for (line_no, line) in content.lines().enumerate() {
-        for capture in re.captures_iter(line) {
-            let r#match = capture.get(1).unwrap();
-            let word = r#match.as_str().to_string();
-            let column_no = r#match.start();
+        for find in re.find_iter(line) {
+            let word = find.as_str().to_string();
+            let column_no = find.start();
             let location = (line_no + 1, column_no);
             index.entry(word).or_insert(Vec::new()).push(location);
         }
