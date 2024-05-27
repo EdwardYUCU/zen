@@ -25,7 +25,7 @@ pub struct Cli {
 }
 
 pub fn search(args: &Cli) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Error> {
-    let re = Regex::new(r"(\w+)").unwrap();
+    let re = Regex::new(r"[a-zA-Z_]+").unwrap();
     let mut index: HashMap<String, Vec<(usize, usize)>> = HashMap::new();
 
     let content = fs::read_to_string(&args.filename)?;
