@@ -24,11 +24,11 @@ pub struct Cli {
     pub quiet: bool,
 }
 
-pub fn search(args: &Cli) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Error> {
+pub fn search(filename: &str) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Error> {
     let re = Regex::new(r"[a-zA-Z_]+").unwrap();
     let mut index: HashMap<String, Vec<(usize, usize)>> = HashMap::new();
 
-    let content = fs::read_to_string(&args.filename)?;
+    let content = fs::read_to_string(filename)?;
 
     for (line_no, line) in content.lines().enumerate() {
         for find in re.find_iter(line) {
