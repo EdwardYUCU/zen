@@ -13,11 +13,15 @@ pub struct Cli {
 
     /// The number of the result to show
     #[arg(short, long)]
-    pub number: Option<i32>,
+    pub number: Option<usize>,
 
     /// Show word count
     #[arg(short, long)]
     pub count: bool,
+
+    /// Less output
+    #[arg(short, long)]
+    pub quiet: bool,
 }
 
 pub fn search(args: &Cli) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Error> {
@@ -38,21 +42,42 @@ pub fn search(args: &Cli) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Er
     Ok(index)
 }
 
-pub fn display(index: &HashMap<String, Vec<(usize, usize)>>, max_num: Option<usize>) {
-    let mut count = Vec::new();
+pub fn display(
+    index: &HashMap<String, Vec<(usize, usize)>>,
+    max_num: Option<usize>,
+    count: bool,
+    quiet: bool,
+) {
+    let mut words = Vec::new();
     for (word, positions) in index {
-        count.push((positions.len(), word));
+        words.push((positions.len(), word));
     }
-    count.sort();
+    words.sort();
     match max_num {
         Some(num) => {
-            for (_, word) in count.iter().rev().take(num) {
-                println!("{} {:?}", word, index.get(*word).unwrap());
+            for (occur, word) in words.iter().rev().take(num) {
+                if count && quiet {
+                    println!("{} {}", occur, word);
+                } else if quiet {
+                    println!("{}", word);
+                } else if count {
+                    println!("{} {} {:?}", occur, word, index.get(*word).unwrap());
+                } else {
+                    println!("{} {:?}", word, index.get(*word).unwrap());
+                }
             }
         }
         None => {
-            for (_, word) in count.iter().rev() {
-                println!("{} {:?}", word, index.get(*word).unwrap());
+            for (occur, word) in words.iter().rev() {
+                if count && quiet {
+                    println!("{} {}", occur, word);
+                } else if quiet {
+                    println!("{}", word);
+                } else if count {
+                    println!("{} {} {:?}", occur, word, index.get(*word).unwrap());
+                } else {
+                    println!("{} {:?}", word, index.get(*word).unwrap());
+                }
             }
         }
     }
