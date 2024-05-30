@@ -1,10 +1,11 @@
 use clap::Parser;
-use zen::{display, search, Cli};
+use std::process;
+use zen::Cli;
 
 fn main() {
     let args: Cli = Cli::parse();
-    match search(&args.filename) {
-        Err(e) => eprintln!("Error: {}", e),
-        Ok(index) => display(&index, args.number, args.count, args.quiet),
+    if let Err(e) = zen::run(args) {
+        eprintln!("Application error {e}");
+        process::exit(1);
     }
 }

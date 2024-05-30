@@ -1,8 +1,10 @@
 use clap::Parser;
 use regex::Regex;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 
 /// A tool to show the word location in a file
 #[derive(Parser)]
@@ -24,17 +26,32 @@ pub struct Cli {
     pub quiet: bool,
 }
 
-pub fn search(filename: &str) -> Result<HashMap<String, Vec<(usize, usize)>>, io::Error> {
-    let re = Regex::new(r"[a-zA-Z]+").unwrap();
-    let mut index: HashMap<String, Vec<(usize, usize)>> = HashMap::new();
+#[derive(Debug)]
+pub struct Location(usize, usize);
 
-    let content = fs::read_to_string(filename)?;
+impl fmt::Display for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({} {})", self.0, self.1)
+    }
+}
+
+pub fn run(args: Cli) -> Result<(), Box<dyn Error>> {
+    let content = fs::read_to_string(args.filename)?;
+    let index = search(&content)?;
+    display(&index, args.number, args.count, args.quiet)?;
+
+    Ok(())
+}
+
+pub fn search(content: &str) -> Result<HashMap<String, Vec<Location>>, Box<dyn Error>> {
+    let re = Regex::new(r"[a-zA-Z]+")?;
+    let mut index: HashMap<String, Vec<Location>> = HashMap::new();
 
     for (line_no, line) in content.lines().enumerate() {
         for find in re.find_iter(line) {
             let word = find.as_str().to_string();
             let column_no = find.start();
-            let location = (line_no + 1, column_no);
+            let location = Location(line_no + 1, column_no);
             index.entry(word).or_insert(Vec::new()).push(location);
         }
     }
@@ -43,42 +60,45 @@ pub fn search(filename: &str) -> Result<HashMap<String, Vec<(usize, usize)>>, io
 }
 
 pub fn display(
-    index: &HashMap<String, Vec<(usize, usize)>>,
+    index: &HashMap<String, Vec<Location>>,
     max_num: Option<usize>,
     count: bool,
     quiet: bool,
-) {
+) -> Result<(), io::Error> {
     let mut words = Vec::new();
     for (word, positions) in index {
         words.push((positions.len(), word));
     }
     words.sort();
+
+    let mut handle = io::stdout().lock();
     match max_num {
         Some(num) => {
             for (occur, word) in words.iter().rev().take(num) {
                 if count && quiet {
-                    println!("{} {}", occur, word);
+                    writeln!(handle, "{} {}", occur, word)?;
                 } else if quiet {
-                    println!("{}", word);
+                    writeln!(handle, "{}", word)?;
                 } else if count {
-                    println!("{} {} {:?}", occur, word, index.get(*word).unwrap());
+                    writeln!(handle, "{} {} {:?}", occur, word, index.get(*word).unwrap())?;
                 } else {
-                    println!("{} {:?}", word, index.get(*word).unwrap());
+                    writeln!(handle, "{} {:?}", word, index.get(*word).unwrap())?;
                 }
             }
         }
         None => {
             for (occur, word) in words.iter().rev() {
                 if count && quiet {
-                    println!("{} {}", occur, word);
+                    writeln!(handle, "{} {}", occur, word)?;
                 } else if quiet {
-                    println!("{}", word);
+                    writeln!(handle, "{}", word)?;
                 } else if count {
-                    println!("{} {} {:?}", occur, word, index.get(*word).unwrap());
+                    writeln!(handle, "{} {} {:?}", occur, word, index.get(*word).unwrap())?;
                 } else {
-                    println!("{} {:?}", word, index.get(*word).unwrap());
+                    writeln!(handle, "{} {:?}", word, index.get(*word).unwrap())?;
                 }
             }
         }
     }
+    Ok(())
 }
