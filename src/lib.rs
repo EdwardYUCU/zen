@@ -26,12 +26,12 @@ pub struct Cli {
     pub quiet: bool,
 }
 
-#[derive(Debug)]
+#[derive(PartialEq, Eq)]
 pub struct Location(usize, usize);
 
-impl fmt::Display for Location {
+impl fmt::Debug for Location {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({} {})", self.0, self.1)
+        write!(f, "({}, {})", self.0, self.1)
     }
 }
 
@@ -43,13 +43,13 @@ pub fn run(args: Cli) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn search(content: &str) -> Result<HashMap<String, Vec<Location>>, Box<dyn Error>> {
+pub fn search<'a>(content: &'a str) -> Result<HashMap<&'a str, Vec<Location>>, Box<dyn Error>> {
     let re = Regex::new(r"[a-zA-Z]+")?;
-    let mut index: HashMap<String, Vec<Location>> = HashMap::new();
+    let mut index: HashMap<&str, Vec<Location>> = HashMap::new();
 
     for (line_no, line) in content.lines().enumerate() {
         for find in re.find_iter(line) {
-            let word = find.as_str().to_string();
+            let word = find.as_str();
             let column_no = find.start();
             let location = Location(line_no + 1, column_no);
             index.entry(word).or_insert(Vec::new()).push(location);
@@ -60,7 +60,7 @@ pub fn search(content: &str) -> Result<HashMap<String, Vec<Location>>, Box<dyn E
 }
 
 pub fn display(
-    index: &HashMap<String, Vec<Location>>,
+    index: &HashMap<&str, Vec<Location>>,
     max_num: Option<usize>,
     count: bool,
     quiet: bool,
@@ -101,4 +101,25 @@ pub fn display(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn simple() {
+        let haystack = "\
+A boy.
+A girl.";
+        let find = search(haystack).unwrap();
+
+        let answer = HashMap::from([
+            ("A", vec![Location(1, 0), Location(2, 0)]),
+            ("boy", vec![Location(1, 2)]),
+            ("girl", vec![Location(2, 2)]),
+        ]);
+
+        assert_eq!(find, answer);
+    }
 }
