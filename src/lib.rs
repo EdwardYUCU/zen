@@ -57,7 +57,7 @@ pub fn search<'a>(content: &'a str) -> Result<HashMap<&'a str, Vec<Location>>, B
         for find in re.find_iter(line) {
             let word = find.as_str();
             let column_no = find.start();
-            let location = Location(line_no + 1, column_no);
+            let location = Location(line_no + 1, column_no + 1);
             index.entry(word).or_insert(Vec::new()).push(location);
         }
     }
@@ -121,9 +121,9 @@ A girl.";
         let find = search(haystack).unwrap();
 
         let answer = HashMap::from([
-            ("A", vec![Location(1, 0), Location(2, 0)]),
-            ("boy", vec![Location(1, 2)]),
-            ("girl", vec![Location(2, 2)]),
+            ("A", vec![Location(1, 1), Location(2, 1)]),
+            ("boy", vec![Location(1, 3)]),
+            ("girl", vec![Location(2, 3)]),
         ]);
 
         assert_eq!(find, answer);
