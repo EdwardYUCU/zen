@@ -7,6 +7,7 @@ use std::fs;
 use std::io::{self, Write};
 
 /// A tool to show the word location in a file
+/// and also optional word count.
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
@@ -26,9 +27,11 @@ pub struct Cli {
     pub quiet: bool,
 }
 
+/// Represent the location of the word
 #[derive(PartialEq, Eq)]
 pub struct Location(usize, usize);
 
+/// For print out the location
 impl fmt::Debug for Location {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "({}, {})", self.0, self.1)
@@ -43,6 +46,9 @@ pub fn run(args: Cli) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+/// Find every word in the given content
+/// and return a HashMap contains all the
+/// words and the corresponding location.
 pub fn search<'a>(content: &'a str) -> Result<HashMap<&'a str, Vec<Location>>, Box<dyn Error>> {
     let re = Regex::new(r"[a-zA-Z]+")?;
     let mut index: HashMap<&str, Vec<Location>> = HashMap::new();
